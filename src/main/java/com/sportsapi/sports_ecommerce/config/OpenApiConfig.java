@@ -5,6 +5,9 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.parameters.HeaderParameter;
+import io.swagger.v3.oas.models.media.StringSchema;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,4 +43,17 @@ public class OpenApiConfig {
                                 .in(SecurityScheme.In.HEADER)
                                 .description("Insira o cabeçalho opcional de versão (ex: 1 ou 2) para testar os endpoints versionados.")));
     }
+
+    @Bean
+    public OperationCustomizer addVersionHeaderParameter() {
+        return (operation, handlerMethod) -> {
+            operation.addParametersItem(new HeaderParameter()
+                    .name("X-API-Version")
+                    .description("Versão da API (ex: 1 ou 2)")
+                    .required(false)
+                    .schema(new StringSchema()._default("1")));
+            return operation;
+        };
+    }
 }
+

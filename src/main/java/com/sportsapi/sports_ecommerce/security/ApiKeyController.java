@@ -6,6 +6,8 @@ import com.sportsapi.sports_ecommerce.model.Usuario;
 import com.sportsapi.sports_ecommerce.repository.ApiKeyRepository;
 import com.sportsapi.sports_ecommerce.repository.UsuarioRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -48,16 +50,40 @@ public class ApiKeyController {
         private NivelAcesso nivelAcesso = NivelAcesso.CLIENTE;
 
         // Getters e Setters
-        public String getNome() { return nome; }
-        public void setNome(String nome) { this.nome = nome; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public NivelAcesso getNivelAcesso() { return nivelAcesso; }
-        public void setNivelAcesso(NivelAcesso nivelAcesso) { this.nivelAcesso = nivelAcesso; }
+        public String getNome() {
+            return nome;
+        }
+
+        public void setNome(String nome) {
+            this.nome = nome;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public NivelAcesso getNivelAcesso() {
+            return nivelAcesso;
+        }
+
+        public void setNivelAcesso(NivelAcesso nivelAcesso) {
+            this.nivelAcesso = nivelAcesso;
+        }
     }
 
     @PostMapping("/gerar")
     @Operation(summary = "Gerar Chave de API (Público)", description = "Gera uma nova chave X-API-Key associada a um usuário. Se o usuário não existir, cria um novo.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Chave de API gerada com sucesso."),
+            @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos ou e-mail malformatado."),
+            @ApiResponse(responseCode = "409", description = "Conflito de dados no cadastro do usuário."),
+            @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<ApiKey>> gerarChave(@RequestBody @Valid KeyRequest request) {
         // Buscar ou criar usuário
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
@@ -73,7 +99,15 @@ public class ApiKeyController {
 
     @GetMapping
     @Operation(summary = "Listar Chaves (Requer ADMIN)", description = "Retorna lista paginada de chaves cadastradas no sistema. Exige cabeçalho X-API-Key com nível ADMIN.")
-    public ResponseEntity<PagedModel<EntityModel<ApiKey>>> listarChaves(Pageable pageable, PagedResourcesAssembler<ApiKey> assembler) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de chaves de API recuperada com sucesso."),
+            @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+            @ApiResponse(responseCode = "403", description = "Acesso proibido. Requer privilégios de ADMIN."),
+            @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
+    public ResponseEntity<PagedModel<EntityModel<ApiKey>>> listarChaves(Pageable pageable,
+            PagedResourcesAssembler<ApiKey> assembler) {
         Page<ApiKey> chaves = apiKeyRepository.findAll(pageable);
         PagedModel<EntityModel<ApiKey>> pagedModel = assembler.toModel(chaves, this::toModel);
         return ResponseEntity.ok(pagedModel);
@@ -81,6 +115,14 @@ public class ApiKeyController {
 
     @PatchMapping("/{id}/revogar")
     @Operation(summary = "Revogar Chave (Requer ADMIN)", description = "Inativa uma chave de API para bloquear futuros acessos. Exige cabeçalho X-API-Key com nível ADMIN.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Chave de API revogada com sucesso."),
+            @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+            @ApiResponse(responseCode = "403", description = "Acesso proibido. Requer privilégios de ADMIN."),
+            @ApiResponse(responseCode = "404", description = "Chave de API não encontrada."),
+            @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<ApiKey>> revogarChave(@PathVariable Long id) {
         return apiKeyRepository.findById(id).map(key -> {
             key.setAtivo(false);
@@ -92,7 +134,6 @@ public class ApiKeyController {
     private EntityModel<ApiKey> toModel(ApiKey apiKey) {
         return EntityModel.of(apiKey,
                 linkTo(methodOn(ApiKeyController.class).listarChaves(null, null)).withRel("chaves"),
-                linkTo(methodOn(ApiKeyController.class).revogarChave(apiKey.getId())).withRel("revogar")
-        );
+                linkTo(methodOn(ApiKeyController.class).revogarChave(apiKey.getId())).withRel("revogar"));
     }
 }

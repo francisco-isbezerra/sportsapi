@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports E-Commerce - API Portal</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+            --font-family: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+                              radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 45%);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 40px;
+        }
+
+        .logo-area h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-area p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 15px;
+        }
+
+        .status-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--secondary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--secondary);
+        }
+
+        .status-dot.yellow {
+            background-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 12px;
+        }
+
+        /* Forms & Inputs */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .input-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-family: var(--font-family);
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: var(--font-family);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.95;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
+        }
+
+        /* Credentials Display */
+        .credential-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed var(--card-border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            position: relative;
+            display: none;
+        }
+
+        .credential-box.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .key-text {
+            font-family: monospace;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            word-break: break-all;
+            background: rgba(16, 185, 129, 0.08);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            display: block;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* API Explorer */
+        .explorer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .explorer-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .badge-select {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Products Grid UI */
+        .products-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+            min-height: 200px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .product-badge-v2 {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .product-cat {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .product-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .product-cond {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            margin-bottom: 15px;
+        }
+
+        .product-cond.novo {
+            color: var(--secondary);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .product-price-row {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .price-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .price-discounted {
+            font-size: 0.85rem;
+            text-decoration: line-through;
+            color: var(--text-muted);
+            margin-right: 5px;
+        }
+
+        /* Rate Limiter Box */
+        .rate-limit-card {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--card-border);
+        }
+
+        .rate-info {
+            flex-grow: 1;
+        }
+
+        .rate-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .rate-progress {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .rate-trigger-btn {
+            background: none;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: var(--font-family);
+            cursor: pointer;
+            margin-left: 20px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .rate-trigger-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Bottom Row / Links Quick Launcher */
+        .links-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .links-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .launcher-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            color: #fff;
+            text-decoration: none;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .launcher-btn:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.1) 100%);
+        }
+
+        .launcher-icon {
+            font-size: 2.2rem;
+        }
+
+        .launcher-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .launcher-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Idempotency Sandbox Card */
+        .idempotency-sandbox {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid var(--card-border);
+        }
+
+        .log-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #a7f3d0;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Keyframe animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border: 1px dashed var(--card-border);
+            border-radius: 15px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow-glow);
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="logo-area">
+            <h1>Sports E-Commerce 🏆</h1>
+            <p>Portal interativo de monitoramento e testes da API RESTful</p>
+        </div>
+        <div class="status-indicators">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>API: Online</span>
+            </div>
+            <div class="status-badge" title="Chave de testes ADMIN pré-carregada!">
+                <span class="status-dot"></span>
+                <span>Seed Data: Pronta</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Left Column: Auth & Tools -->
+        <div class="left-column" style="display: flex; flex-direction: column; gap: 30px;">
+            <!-- Authentication Card -->
+            <div class="card">
+                <h3 class="card-title">🔐 Central de Autenticação</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Crie sua chave de acesso ou use a chave de testes administrativa padrão do professor.
+                </p>
+
+                <div class="form-group">
+                    <label for="profKeyBtn">Chave Rápida de Testes (ADMIN)</label>
+                    <button class="btn" id="profKeyBtn" style="background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);">
+                        Utilizar Chave 'sports-admin-test-key'
+                    </button>
+                </div>
+
+                <div style="text-align: center; color: var(--text-muted); margin: 15px 0; font-size: 0.85rem; font-weight: bold;">
+                    — OU GERAR NOVA CHAVE —
+                </div>
+
+                <div class="form-group">
+                    <label for="userName">Nome Completo</label>
+                    <input type="text" id="userName" class="input-control" placeholder="Ex: Gabriel Silva">
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">E-mail Corporativo</label>
+                    <input type="email" id="userEmail" class="input-control" placeholder="Ex: gabriel@sports.com">
+                </div>
+                <div class="form-group">
+                    <label for="keyRole">Nível de Acesso</label>
+                    <select id="keyRole" class="badge-select" style="width: 100%; padding: 12px; font-size: 0.95rem;">
+                        <option value="CLIENTE">CLIENTE (Apenas Leitura / GET)</option>
+                        <option value="ADMIN">ADMIN (Escrita & Leitura / POST, PUT, DELETE)</option>
+                    </select>
+                </div>
+                <button class="btn" id="genKeyBtn">Gerar Chave de API</button>
+
+                <!-- Credentials Info -->
+                <div class="credential-box" id="credentialBox">
+                    <h4 style="font-size: 0.9rem; font-weight: 700; color: #fff;">Chave Ativa na Sessão:</h4>
+                    <span class="key-text" id="activeKeyText">Nenhuma</span>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8rem;">
+                        <span style="color: var(--text-muted);">Role: <strong id="activeRoleText" style="color: #fff;">-</strong></span>
+                        <span style="color: var(--secondary); cursor: pointer;" id="clearKeyBtn">Limpar chave</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Idempotency & Creation Sandbox -->
+            <div class="card">
+                <h3 class="card-title">🔄 Idempotência de POST</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Submeta um POST de criação de produto com o header <code>X-Idempotency-Key</code>. Tente clicar duas vezes no botão de criar!
+                </p>
+
+                <div class="form-group">
+                    <label for="newProdName">Nome do Equipamento</label>
+                    <input type="text" id="newProdName" class="input-control" placeholder="Ex: Chuteira Nike Tempo" value="Bola Adidas FIFA">
+                </div>
+                <div class="form-group">
+                    <label for="newProdPrice">Preço (R$)</label>
+                    <input type="number" id="newProdPrice" class="input-control" value="189.90">
+                </div>
+                <div class="form-group">
+                    <label for="idempotencyKeyInput">Chave de Idempotência (Gerada automaticamente)</label>
+                    <input type="text" id="idempotencyKeyInput" class="input-control" readonly style="font-family: monospace; color: var(--accent); background: rgba(0,0,0,0.15);">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" id="regeneIdempKeyBtn" style="width: 30%;">🔄 Gerar</button>
+                    <button class="btn" id="postProductBtn" style="width: 70%;">Criar Produto (POST)</button>
+                </div>
+                
+                <div class="log-box" id="idempLogBox">Painel de logs da resposta POST...</div>
+            </div>
+        </div>
+
+        <!-- Right Column: API Playground & Products -->
+        <div class="right-column" style="display: flex; flex-direction: column; gap: 30px;">
+            <!-- Interactive API Catalog -->
+            <div class="card">
+                <div class="explorer-header">
+                    <h3 class="card-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">👟 Catálogo de Artigos Esportivos</h3>
+                    <div class="explorer-controls">
+                        <div>
+                            <select id="apiVersionSelect" class="badge-select">
+                                <option value="1">Versão 1 (Padrão)</option>
+                                <option value="2">Versão 2 (10% OFF + Preço BRL)</option>
+                            </select>
+                        </div>
+                        <button class="btn" id="fetchProductsBtn" style="padding: 8px 16px; font-size: 0.9rem; width: auto;">Buscar Catálogo</button>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Demonstração interativa de versionamento de API via cabeçalho <code>X-API-Version</code> e paginação HATEOAS.
+                </p>
+
+                <!-- Dynamic Grid -->
+                <div class="products-container" id="productsContainer">
+                    <div class="empty-state">
+                        Insira sua Chave de API e clique em <strong>"Buscar Catálogo"</strong> para renderizar os produtos esportivos.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Limiting Monitor -->
+            <div class="card">
+                <h3 class="card-title">⏱️ Limitador de Taxa (Rate Limiting)</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Nossa API implementa limitação de taxa por IP de 15 chamadas a cada 10 segundos. Clique consecutivamente no botão de testes para ver o limitador esgotar e retornar o status <strong>429 (Too Many Requests)</strong>.
+                </p>
+
+                <div class="rate-limit-card">
+                    <div class="rate-info">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600;">
+                            <span>Tokens Restantes na Sessão</span>
+                            <span id="rateLimitText">15 / 15</span>
+                        </div>
+                        <div class="rate-progress-bar">
+                            <div class="rate-progress" id="rateLimitProgress" style="width: 100%;"></div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;" id="rateStatusText">
+                            IP monitorado. Sem restrições de tráfego ativas.
+                        </div>
+                    </div>
+                    <button class="rate-trigger-btn" id="rateLimitTestBtn">Disparar GET rápido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Launcher Buttons -->
+    <div class="links-row">
+        <a href="/swagger-ui.html" target="_blank" class="launcher-btn">
+            <span class="launcher-icon">🚀</span>
+            <span class="launcher-title">Documentação Swagger UI</span>
+            <span class="launcher-desc">Acesse todos os endpoints de forma interativa pelo OpenAPI 3</span>
+        </a>
+        <a href="/h2-console" target="_blank" class="launcher-btn">
+            <span class="launcher-icon">🗄️</span>
+            <span class="launcher-title">Banco H2 Console</span>
+            <span class="launcher-desc">Inspecione e gerencie as tabelas relacionais em tempo real</span>
+        </a>
+        <a href="/sports-ecommerce-api.postman_collection.json" download class="launcher-btn">
+            <span class="launcher-icon">📁</span>
+            <span class="launcher-title">Coleção do Postman</span>
+            <span class="launcher-desc">Baixe a coleção completa com todas as requisições configuradas</span>
+        </a>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast">Notificação padrão</div>
+
+<script>
+    // Configurações do Estado Global
+    const state = {
+        apiKey: localStorage.getItem('sports_api_key') || '',
+        activeRole: localStorage.getItem('sports_role') || '',
+        idempotencyKey: generateUUID()
+    };
+
+    // DOM Elements
+    const elements = {
+        profKeyBtn: document.getElementById('profKeyBtn'),
+        userName: document.getElementById('userName'),
+        userEmail: document.getElementById('userEmail'),
+        keyRole: document.getElementById('keyRole'),
+        genKeyBtn: document.getElementById('genKeyBtn'),
+        credentialBox: document.getElementById('credentialBox'),
+        activeKeyText: document.getElementById('activeKeyText'),
+        activeRoleText: document.getElementById('activeRoleText'),
+        clearKeyBtn: document.getElementById('clearKeyBtn'),
+        apiVersionSelect: document.getElementById('apiVersionSelect'),
+        fetchProductsBtn: document.getElementById('fetchProductsBtn'),
+        productsContainer: document.getElementById('productsContainer'),
+        idempotencyKeyInput: document.getElementById('idempotencyKeyInput'),
+        regeneIdempKeyBtn: document.getElementById('regeneIdempKeyBtn'),
+        postProductBtn: document.getElementById('postProductBtn'),
+        idempLogBox: document.getElementById('idempLogBox'),
+        newProdName: document.getElementById('newProdName'),
+        newProdPrice: document.getElementById('newProdPrice'),
+        rateLimitTestBtn: document.getElementById('rateLimitTestBtn'),
+        rateLimitText: document.getElementById('rateLimitText'),
+        rateLimitProgress: document.getElementById('rateLimitProgress'),
+        rateStatusText: document.getElementById('rateStatusText'),
+        toast: document.getElementById('toast')
+    };
+
+    // Inicialização
+    function init() {
+        if (state.apiKey) {
+            showCredentials();
+        }
+        elements.idempotencyKeyInput.value = state.idempotencyKey;
+    }
+
+    // Gerador de UUID para Chaves de Idempotência
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Exibir Notificação Toast
+    function showToast(message, isError = false) {
+        elements.toast.textContent = message;
+        elements.toast.style.borderColor = isError ? '#ef4444' : 'var(--primary)';
+        elements.toast.style.boxShadow = isError ? '0 0 20px rgba(239, 68, 68, 0.3)' : 'var(--shadow-glow)';
+        elements.toast.style.display = 'block';
+        setTimeout(() => {
+            elements.toast.style.display = 'none';
+        }, 4000);
+    }
+
+    // Exibir Chaves Ativas
+    function showCredentials() {
+        elements.activeKeyText.textContent = state.apiKey;
+        elements.activeRoleText.textContent = state.activeRole;
+        elements.credentialBox.classList.add('active');
+    }
+
+    // Limpar Chaves
+    elements.clearKeyBtn.addEventListener('click', () => {
+        localStorage.removeItem('sports_api_key');
+        localStorage.removeItem('sports_role');
+        state.apiKey = '';
+        state.activeRole = '';
+        elements.credentialBox.classList.remove('active');
+        showToast('Chave de API removida da sessão.');
+    });
+
+    // Usar chave padrão do professor
+    elements.profKeyBtn.addEventListener('click', () => {
+        state.apiKey = 'sports-admin-test-key';
+        state.activeRole = 'ADMIN';
+        localStorage.setItem('sports_api_key', state.apiKey);
+        localStorage.setItem('sports_role', state.activeRole);
+        showCredentials();
+        showToast('Chave administrativa do professor ativa com sucesso!');
+    });
+
+    // Gerar Chave via API
+    elements.genKeyBtn.addEventListener('click', async () => {
+        const nome = elements.userName.value.trim();
+        const email = elements.userEmail.value.trim();
+        const role = elements.keyRole.value;
+
+        if (!nome || !email) {
+            showToast('Por favor, preencha o Nome e o E-mail.', true);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/keys/gerar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email, nivelAcesso: role })
+            });
+
+            if (!response.ok) throw new Error('Erro ao gerar a chave de API');
+
+            const data = await response.json();
+            state.apiKey = data.chave;
+            state.activeRole = data.nivelAcesso;
+            localStorage.setItem('sports_api_key', state.apiKey);
+            localStorage.setItem('sports_role', state.activeRole);
+            showCredentials();
+            showToast('Sua chave foi gerada e ativada automaticamente!');
+            
+            // Limpa form
+            elements.userName.value = '';
+            elements.userEmail.value = '';
+        } catch (error) {
+            showToast('Erro de requisição: ' + error.message, true);
+        }
+    });
+
+    // Regenerar Chave de Idempotência
+    elements.regeneIdempKeyBtn.addEventListener('click', () => {
+        state.idempotencyKey = generateUUID();
+        elements.idempotencyKeyInput.value = state.idempotencyKey;
+        showToast('Nova chave de idempotência gerada!');
+    });
+
+    // Buscar Produtos do Catálogo (Explorer)
+    elements.fetchProductsBtn.addEventListener('click', async () => {
+        if (!state.apiKey) {
+            showToast('Chave de API não informada! Insira a chave ou use a chave de testes do professor.', true);
+            return;
+        }
+
+        const version = elements.apiVersionSelect.value;
+        
+        try {
+            elements.productsContainer.innerHTML = '<div class="empty-state">Buscando catálogo esportivo...</div>';
+            
+            const response = await fetch('/api/produtos?page=0&size=6', {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': state.apiKey,
+                    'X-API-Version': version
+                }
+            });
+
+            if (response.status === 401) {
+                elements.productsContainer.innerHTML = '<div class="empty-state" style="color:#ef4444;">Chave de API inválida ou revogada!</div>';
+                showToast('Não autorizado! Verifique seu X-API-Key.', true);
+                return;
+            }
+
+            if (response.status === 429) {
+                const retryAfter = response.headers.get('Retry-After') || '10';
+                elements.productsContainer.innerHTML = `<div class="empty-state" style="color:#f59e0b;">Limite de taxa excedido! Retry-After: ${retryAfter} segundos.</div>`;
+                showToast('Rate limit estourado!', true);
+                return;
+            }
+
+            if (!response.ok) throw new Error('Erro ao buscar o catálogo');
+
+            const data = await response.json();
+            renderProducts(data, version);
+        } catch (error) {
+            elements.productsContainer.innerHTML = `<div class="empty-state" style="color:#ef4444;">Erro de conexão: ${error.message}</div>`;
+        }
+    });
+
+    // Renderizar Artigos na Tela
+    function renderProducts(pagedModel, version) {
+        elements.productsContainer.innerHTML = '';
+        
+        // Verifica se há conteúdo no PagedModel HATEOAS
+        const content = pagedModel._embedded ? pagedModel._embedded.produtoList || pagedModel._embedded.produtoV2DtoList : [];
+        
+        if (!content || content.length === 0) {
+            elements.productsContainer.innerHTML = '<div class="empty-state">Nenhum produto cadastrado no banco.</div>';
+            return;
+        }
+
+        content.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+
+            const isV2 = version === '2';
+            
+            // Badge V2
+            if (isV2 && p.desconto) {
+                const badge = document.createElement('span');
+                badge.className = 'product-badge-v2';
+                badge.textContent = '10% OFF';
+                card.appendChild(badge);
+            }
+
+            const cat = document.createElement('span');
+            cat.className = 'product-cat';
+            cat.textContent = isV2 ? p.categoriaNome : (p.categoria ? p.categoria.nome : 'Geral');
+
+            const name = document.createElement('h4');
+            name.className = 'product-name';
+            name.textContent = p.nome;
+
+            const cond = document.createElement('span');
+            cond.className = 'product-cond ' + (p.condicao ? p.condicao.toLowerCase() : 'novo');
+            cond.textContent = p.condicao || 'NOVO';
+
+            // Preço
+            const priceRow = document.createElement('div');
+            priceRow.className = 'product-price-row';
+            
+            const label = document.createElement('span');
+            label.className = 'price-label';
+            label.textContent = 'Valor Unitário';
+
+            const price = document.createElement('span');
+            price.className = 'price-value';
+            
+            if (isV2 && p.precoFormatado) {
+                const oldPrice = document.createElement('span');
+                oldPrice.className = 'price-discounted';
+                oldPrice.textContent = `R$ ${p.preco.toFixed(2)}`;
+                priceRow.appendChild(oldPrice);
+                
+                price.textContent = p.precoFormatado;
+                price.style.color = 'var(--secondary)';
+            } else {
+                price.textContent = `R$ ${p.preco.toFixed(2)}`;
+            }
+
+            priceRow.appendChild(label);
+            priceRow.appendChild(price);
+
+            card.appendChild(cat);
+            card.appendChild(name);
+            card.appendChild(cond);
+            card.appendChild(priceRow);
+
+            elements.productsContainer.appendChild(card);
+        });
+    }
+
+    // Criar Produto com Idempotência (POST)
+    elements.postProductBtn.addEventListener('click', async () => {
+        if (!state.apiKey) {
+            showToast('Insira sua Chave de API primeiro!', true);
+            return;
+        }
+
+        const nome = elements.newProdName.value.trim();
+        const preco = parseFloat(elements.newProdPrice.value);
+        const idempKey = elements.idempotencyKey;
+
+        if (!nome || isNaN(preco)) {
+            showToast('Preencha o nome e preço do produto.', true);
+            return;
+        }
+
+        try {
+            elements.idempLogBox.textContent = 'Enviando POST para a API...';
+            
+            const response = await fetch('/api/produtos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': state.apiKey,
+                    'X-Idempotency-Key': idempKey
+                },
+                body: JSON.stringify({ nome, preco, condicao: 'NOVO' })
+            });
+
+            const cacheHeader = response.headers.get('X-Cache-Lookup') || 'MISS - New Request';
+            const status = response.status;
+            const data = await response.json();
+
+            // Renderiza Log detalhado
+            elements.idempLogBox.innerHTML = 
+`<strong>HTTP Status:</strong> ${status}
+<strong>Idempotency Header:</strong> ${cacheHeader}
+<strong>Response JSON:</strong>
+${JSON.stringify(data, null, 2)}`;
+
+            if (status === 201) {
+                showToast('Produto cadastrado com sucesso!');
+            } else if (cacheHeader.includes('HIT')) {
+                showToast('Aviso: Operação Idempotente! (Cache HIT)', false);
+            }
+        } catch (error) {
+            elements.idempLogBox.textContent = 'Erro na requisição: ' + error.message;
+        }
+    });
+
+    // Testar Rate Limiting GET Rápido
+    elements.rateLimitTestBtn.addEventListener('click', async () => {
+        if (!state.apiKey) {
+            showToast('Forneça a Chave de API primeiro!', true);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/categorias?page=0&size=1', {
+                method: 'GET',
+                headers: { 'X-API-Key': state.apiKey }
+            });
+
+            const limit = response.headers.get('X-RateLimit-Limit') || '15';
+            const remaining = response.headers.get('X-RateLimit-Remaining') || '0';
+            const retryAfter = response.headers.get('Retry-After');
+
+            elements.rateLimitText.textContent = `${remaining} / ${limit}`;
+            
+            // Progress Bar
+            const percent = (parseInt(remaining) / parseInt(limit)) * 100;
+            elements.rateLimitProgress.style.width = `${percent}%`;
+
+            if (percent < 30) {
+                elements.rateLimitProgress.style.background = '#ef4444'; // Red
+            } else if (percent < 70) {
+                elements.rateLimitProgress.style.background = 'var(--accent)'; // Orange
+            } else {
+                elements.rateLimitProgress.style.background = 'linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%)';
+            }
+
+            if (response.status === 429) {
+                elements.rateStatusText.innerHTML = `<span style="color:#ef4444; font-weight:700;">[BLOQUEADO] Status 429! Retry-After: ${retryAfter} segundos.</span>`;
+                showToast(`Bloqueado! Aguarde ${retryAfter} segundos.`, true);
+            } else {
+                elements.rateStatusText.innerHTML = `<span style="color:var(--secondary);">[200 OK] Requisição permitida.</span>`;
+            }
+        } catch (error) {
+            elements.rateStatusText.textContent = 'Erro ao disparar: ' + error.message;
+        }
+    });
+
+    // Iniciar
+    init();
+</script>
+
+</body>
+</html>

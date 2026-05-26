@@ -4,6 +4,8 @@ import com.sportsapi.sports_ecommerce.model.Cliente;
 import com.sportsapi.sports_ecommerce.repository.ClienteRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,12 @@ public class ClienteController {
 
     @GetMapping
     @Operation(summary = "Listar Clientes (GET)", description = "Retorna uma lista paginada de clientes com links de paginação HATEOAS.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de clientes recuperada com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Cliente>>> listar(
             Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Cliente> assembler) {
@@ -52,6 +60,13 @@ public class ClienteController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar por ID (GET)", description = "Recupera um cliente específico com links HATEOAS.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cliente recuperado com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "404", description = "Cliente não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Cliente>> buscar(@PathVariable Long id) {
         return repository.findById(id)
                 .map(c -> ResponseEntity.ok(toModel(c)))
@@ -60,6 +75,12 @@ public class ClienteController {
 
     @GetMapping("/buscar-por-nome")
     @Operation(summary = "Consulta Personalizada - Buscar por Nome (GET)", description = "Retorna clientes cujo nome contém o texto especificado (case-insensitive).")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Clientes filtrados por nome com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Cliente>>> buscarPorNome(
             @RequestParam String nome,
             Pageable pageable,
@@ -71,6 +92,15 @@ public class ClienteController {
 
     @PostMapping
     @Operation(summary = "Criar Cliente (POST)", description = "Cadastra um cliente e seu endereço. Requer cabeçalho X-Idempotency-Key.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Cliente criado com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos ou cabeçalho X-Idempotency-Key ausente."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "409", description = "Conflito. Chave de idempotência já utilizada ou violação de integridade no banco."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Cliente>> criar(
             @RequestBody @Valid Cliente cliente,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
@@ -80,6 +110,15 @@ public class ClienteController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Substituir (PUT)", description = "Atualiza todos os dados do cliente e do endereço associado.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cliente substituído com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Cliente não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Cliente>> substituir(@PathVariable Long id, @RequestBody @Valid Cliente novoCliente) {
         return repository.findById(id).map(cliente -> {
             cliente.setNome(novoCliente.getNome());
@@ -91,6 +130,14 @@ public class ClienteController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Atualizar Parcial (PATCH)", description = "Atualiza apenas os campos enviados no corpo.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cliente atualizado com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Cliente não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Cliente>> atualizarParcial(@PathVariable Long id, @RequestBody Map<String, Object> campos) {
         Optional<Cliente> clienteOpt = repository.findById(id);
         if (clienteOpt.isEmpty()) return ResponseEntity.notFound().build();
@@ -115,6 +162,14 @@ public class ClienteController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remover (DELETE)", description = "Exclui o cliente e seu endereço associado.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Cliente excluído com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Cliente não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();
         repository.deleteById(id);
