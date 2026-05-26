@@ -39,6 +39,8 @@ public class ProdutoController {
         private String precoFormatado; // Campo extra formatado da V2
         private String condicao;
         private String categoriaNome; // Nome simplificado da categoria para o cliente da V2
+        private String desconto; // NOVO: Campo extra da V2
+        private Double precoComDesconto; // NOVO: Campo extra da V2
 
         public ProdutoV2Dto(Produto p) {
             this.id = p.getId();
@@ -47,6 +49,8 @@ public class ProdutoController {
             this.precoFormatado = String.format("R$ %.2f", p.getPreco());
             this.condicao = p.getCondicao() != null ? p.getCondicao().name() : null;
             this.categoriaNome = p.getCategoria() != null ? p.getCategoria().getNome() : "Sem Categoria";
+            this.desconto = "10% de Desconto Esportivo Especial!";
+            this.precoComDesconto = p.getPreco() != null ? Math.round((p.getPreco() * 0.9) * 100.0) / 100.0 : 0.0;
         }
 
         // Getters e Setters
@@ -62,6 +66,10 @@ public class ProdutoController {
         public void setCondicao(String condicao) { this.condicao = condicao; }
         public String getCategoriaNome() { return categoriaNome; }
         public void setCategoriaNome(String categoriaNome) { this.categoriaNome = categoriaNome; }
+        public String getDesconto() { return desconto; }
+        public void setDesconto(String desconto) { this.desconto = desconto; }
+        public Double getPrecoComDesconto() { return precoComDesconto; }
+        public void setPrecoComDesconto(Double precoComDesconto) { this.precoComDesconto = precoComDesconto; }
     }
 
     // Assembler auxiliar para V1
@@ -71,7 +79,7 @@ public class ProdutoController {
                 linkTo(methodOn(ProdutoController.class).substituir(p.getId(), null)).withRel("update"),
                 linkTo(methodOn(ProdutoController.class).atualizarParcial(p.getId(), null)).withRel("patch"),
                 linkTo(methodOn(ProdutoController.class).deletar(p.getId())).withRel("delete"),
-                linkTo(methodOn(ProdutoController.class).listarV1(null, null)).withRel("colecao")
+                linkTo(methodOn(ProdutoController.class).listar(null, null, null)).withRel("colecao")
         );
     }
 
@@ -80,43 +88,30 @@ public class ProdutoController {
         ProdutoV2Dto dto = new ProdutoV2Dto(p);
         return EntityModel.of(dto,
                 linkTo(methodOn(ProdutoController.class).buscarPorId(p.getId())).withSelfRel(),
-                linkTo(methodOn(ProdutoController.class).listarV2(null, null)).withRel("colecao")
+                linkTo(methodOn(ProdutoController.class).listar(null, null, null)).withRel("colecao")
         );
     }
 
     // ==========================================
-    // 1. GET - LISTAR (VERSIONAMENTO VIA CABEÇALHO)
+    // 1. GET - LISTAR (UNIFICADO COM VERSIONAMENTO)
     // ==========================================
 
-    // Versão 1: Retorno padrão (caso X-API-Version seja 1 ou não enviado)
-    @GetMapping(headers = "!X-API-Version")
-    @Operation(summary = "Listar Produtos V1 (Padrão)", description = "Retorna lista de produtos padrão de forma paginada. Executado se X-API-Version não for enviado.")
-    public ResponseEntity<PagedModel<EntityModel<Produto>>> listarPadrao(
+    @GetMapping
+    @Operation(summary = "Listar Produtos (GET)", description = "Retorna produtos de forma paginada. Se o cabeçalho X-API-Version for igual a '2', retorna o contrato V2 (com preço formatado, desconto e categoria simplificada). Caso contrário (ou se ausente), retorna a V1 padrão.")
+    public ResponseEntity<?> listar(
             Pageable pageable,
+            @RequestHeader(value = "X-API-Version", required = false) String apiVersion,
             @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
-        return listarV1(pageable, assembler);
-    }
 
-    @GetMapping(headers = "X-API-Version=1")
-    @Operation(summary = "Listar Produtos V1 (Cabeçalho)", description = "Retorna lista de produtos padrão. Ativado pelo cabeçalho X-API-Version=1.")
-    public ResponseEntity<PagedModel<EntityModel<Produto>>> listarV1(
-            Pageable pageable,
-            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
         Page<Produto> lista = repository.findAll(pageable);
-        PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);
-        return ResponseEntity.ok(pagedModel);
-    }
 
-    // Versão 2: Retorno aprimorado (caso X-API-Version seja 2)
-    @GetMapping(headers = "X-API-Version=2")
-    @Operation(summary = "Listar Produtos V2 (Cabeçalho)", description = "Retorna lista de produtos no novo formato V2 (com preço formatado e categoria simplificada). Ativado por X-API-Version=2.")
-    public ResponseEntity<PagedModel<EntityModel<ProdutoV2Dto>>> listarV2(
-            Pageable pageable,
-            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
-        Page<Produto> lista = repository.findAll(pageable);
-        // Mapeia o resultado usando o assembler para o DTO V2
-        PagedModel<EntityModel<ProdutoV2Dto>> pagedModel = assembler.toModel(lista, this::toModelV2);
-        return ResponseEntity.ok(pagedModel);
+        if ("2".equals(apiVersion)) {
+            PagedModel<EntityModel<ProdutoV2Dto>> pagedModel = assembler.toModel(lista, this::toModelV2);
+            return ResponseEntity.ok(pagedModel);
+        } else {
+            PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);
+            return ResponseEntity.ok(pagedModel);
+        }
     }
 
     // ==========================================

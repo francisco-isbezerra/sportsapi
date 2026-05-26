@@ -53,6 +53,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("handlerExceptionResolver")
+    private org.springframework.web.servlet.HandlerExceptionResolver resolver;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -90,17 +94,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             long retryAfterSeconds = (long) Math.ceil(retryAfterMsOut[0] / 1000.0);
             if (retryAfterSeconds < 1) retryAfterSeconds = 1;
 
-            response.setStatus(429); // Too Many Requests
-            response.setContentType("application/json;charset=UTF-8");
-            response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
-
-            String json = String.format(
-                    "{\"timestamp\":\"%s\",\"status\":429,\"error\":\"Too Many Requests\"," +
-                    "\"message\":\"Limite de taxa excedido. Por favor, aguarde antes de fazer novas requisições.\"," +
-                    "\"retryAfterSeconds\":%d}",
-                    java.time.LocalDateTime.now(), retryAfterSeconds
-            );
-            response.getWriter().write(json);
+            resolver.resolveException(request, response, null, 
+                    new com.sportsapi.sports_ecommerce.exception.RateLimitExceededException(retryAfterSeconds));
         }
     }
 
