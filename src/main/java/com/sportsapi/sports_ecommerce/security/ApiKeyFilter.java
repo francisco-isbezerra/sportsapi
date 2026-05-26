@@ -116,6 +116,14 @@ public class ApiKeyFilter extends OncePerRequestFilter {
                 "{\"timestamp\":\"%s\",\"status\":%d,\"error\":\"%s\",\"message\":\"%s\"}",
                 java.time.LocalDateTime.now(), status, erro, mensagem
         );
-        response.getWriter().write(json);
+        try {
+            response.getWriter().write(json);
+        } catch (IllegalStateException e) {
+            try {
+                response.getOutputStream().write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            } catch (Exception ex) {
+                System.err.println(">>> [WARN] Falha total ao escrever resposta de erro no ApiKeyFilter: " + ex.getMessage());
+            }
+        }
     }
 }
