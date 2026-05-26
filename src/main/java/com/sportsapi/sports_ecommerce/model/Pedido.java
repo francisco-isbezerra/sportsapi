@@ -16,6 +16,8 @@ public class Pedido extends RepresentationModel<Pedido> {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("pedidos")
+    @jakarta.validation.constraints.NotNull(message = "O cliente é obrigatório")
     private Cliente cliente;
 
     // Cria uma tabela intermediária no banco chamada 'pedido_produto'
@@ -25,6 +27,7 @@ public class Pedido extends RepresentationModel<Pedido> {
             joinColumns = @JoinColumn(name = "pedido_id"),
             inverseJoinColumns = @JoinColumn(name = "produto_id")
     )
+    @jakarta.validation.constraints.NotEmpty(message = "O pedido deve ter pelo menos um produto")
     private List<Produto> produtos;
 
     public Pedido() {}

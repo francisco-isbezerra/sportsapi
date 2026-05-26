@@ -9,9 +9,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Permite que qualquer origem (browser) acesse sua API
+        // Configura detalhadamente o CORS permitindo cabeçalhos personalizados de controle
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("X-API-Key", "X-Idempotency-Key", "X-API-Version", "Content-Type", "Authorization")
+                .exposedHeaders("Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-Cache-Lookup")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

@@ -18,9 +18,12 @@ public class Cliente extends RepresentationModel<Cliente> {
     // CascadeType.ALL faz com que, ao salvar o cliente, o endereço também seja salvo
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "endereco_id", referencedColumnName = "id")
+    @jakarta.validation.constraints.NotNull(message = "O endereço é obrigatório")
+    @jakarta.validation.Valid
     private Endereco endereco;
 
     @OneToMany(mappedBy = "cliente")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("cliente")
     private List<Pedido> pedidos;
 
     public Cliente() {}

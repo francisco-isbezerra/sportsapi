@@ -3,11 +3,16 @@ package com.sportsapi.sports_ecommerce.controller;
 import com.sportsapi.sports_ecommerce.model.Produto;
 import com.sportsapi.sports_ecommerce.repository.ProdutoRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,65 +24,155 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/api/v1/produtos")
-@Tag(name = "Produtos", description = "Gerenciamento de estoque com os 5 métodos HTTP")
+@RequestMapping("/api/produtos")
+@Tag(name = "Produtos", description = "Gerenciamento de produtos com paginação, HATEOAS e Versionamento (X-API-Version)")
 public class ProdutoController {
 
     @Autowired
     private ProdutoRepository repository;
 
-    // 1. GET - Recupera dados (Seguro e Idempotente)
-    @GetMapping
-    @Operation(summary = "Listar (GET)", description = "Retorna produtos de forma paginada. É seguro e idempotente.")
-    public ResponseEntity<Page<Produto>> listar(Pageable pageable) {
-        Page<Produto> lista = repository.findAll(pageable);
-        for(Produto p : lista) {
-            // HATEOAS: Adiciona link para o próprio recurso
-            p.add(linkTo(methodOn(ProdutoController.class).buscarPorId(p.getId())).withSelfRel());
+    // --- CLASSE DTO PARA A VERSÃO 2 DA API ---
+    public static class ProdutoV2Dto extends RepresentationModel<ProdutoV2Dto> {
+        private Long id;
+        private String nome;
+        private Double preco;
+        private String precoFormatado; // Campo extra formatado da V2
+        private String condicao;
+        private String categoriaNome; // Nome simplificado da categoria para o cliente da V2
+
+        public ProdutoV2Dto(Produto p) {
+            this.id = p.getId();
+            this.nome = p.getNome();
+            this.preco = p.getPreco();
+            this.precoFormatado = String.format("R$ %.2f", p.getPreco());
+            this.condicao = p.getCondicao() != null ? p.getCondicao().name() : null;
+            this.categoriaNome = p.getCategoria() != null ? p.getCategoria().getNome() : "Sem Categoria";
         }
-        return ResponseEntity.ok(lista);
+
+        // Getters e Setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        public String getNome() { return nome; }
+        public void setNome(String nome) { this.nome = nome; }
+        public Double getPreco() { return preco; }
+        public void setPreco(Double preco) { this.preco = preco; }
+        public String getPrecoFormatado() { return precoFormatado; }
+        public void setPrecoFormatado(String precoFormatado) { this.precoFormatado = precoFormatado; }
+        public String getCondicao() { return condicao; }
+        public void setCondicao(String condicao) { this.condicao = condicao; }
+        public String getCategoriaNome() { return categoriaNome; }
+        public void setCategoriaNome(String categoriaNome) { this.categoriaNome = categoriaNome; }
     }
 
+    // Assembler auxiliar para V1
+    private EntityModel<Produto> toModelV1(Produto p) {
+        return EntityModel.of(p,
+                linkTo(methodOn(ProdutoController.class).buscarPorId(p.getId())).withSelfRel(),
+                linkTo(methodOn(ProdutoController.class).substituir(p.getId(), null)).withRel("update"),
+                linkTo(methodOn(ProdutoController.class).atualizarParcial(p.getId(), null)).withRel("patch"),
+                linkTo(methodOn(ProdutoController.class).deletar(p.getId())).withRel("delete"),
+                linkTo(methodOn(ProdutoController.class).listarV1(null, null)).withRel("colecao")
+        );
+    }
+
+    // Assembler auxiliar para V2
+    private EntityModel<ProdutoV2Dto> toModelV2(Produto p) {
+        ProdutoV2Dto dto = new ProdutoV2Dto(p);
+        return EntityModel.of(dto,
+                linkTo(methodOn(ProdutoController.class).buscarPorId(p.getId())).withSelfRel(),
+                linkTo(methodOn(ProdutoController.class).listarV2(null, null)).withRel("colecao")
+        );
+    }
+
+    // ==========================================
+    // 1. GET - LISTAR (VERSIONAMENTO VIA CABEÇALHO)
+    // ==========================================
+
+    // Versão 1: Retorno padrão (caso X-API-Version seja 1 ou não enviado)
+    @GetMapping(headers = "!X-API-Version")
+    @Operation(summary = "Listar Produtos V1 (Padrão)", description = "Retorna lista de produtos padrão de forma paginada. Executado se X-API-Version não for enviado.")
+    public ResponseEntity<PagedModel<EntityModel<Produto>>> listarPadrao(
+            Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
+        return listarV1(pageable, assembler);
+    }
+
+    @GetMapping(headers = "X-API-Version=1")
+    @Operation(summary = "Listar Produtos V1 (Cabeçalho)", description = "Retorna lista de produtos padrão. Ativado pelo cabeçalho X-API-Version=1.")
+    public ResponseEntity<PagedModel<EntityModel<Produto>>> listarV1(
+            Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
+        Page<Produto> lista = repository.findAll(pageable);
+        PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    // Versão 2: Retorno aprimorado (caso X-API-Version seja 2)
+    @GetMapping(headers = "X-API-Version=2")
+    @Operation(summary = "Listar Produtos V2 (Cabeçalho)", description = "Retorna lista de produtos no novo formato V2 (com preço formatado e categoria simplificada). Ativado por X-API-Version=2.")
+    public ResponseEntity<PagedModel<EntityModel<ProdutoV2Dto>>> listarV2(
+            Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
+        Page<Produto> lista = repository.findAll(pageable);
+        // Mapeia o resultado usando o assembler para o DTO V2
+        PagedModel<EntityModel<ProdutoV2Dto>> pagedModel = assembler.toModel(lista, this::toModelV2);
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    // ==========================================
+    // OUTROS MÉTODOS HTTP
+    // ==========================================
+
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar por ID (GET)", description = "Recupera um produto específico sem alterar o estado do servidor.")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
+    @Operation(summary = "Buscar por ID (GET)", description = "Recupera os detalhes de um produto com links HATEOAS.")
+    public ResponseEntity<EntityModel<Produto>> buscarPorId(@PathVariable Long id) {
         return repository.findById(id)
-                .map(p -> ResponseEntity.ok(p.add(linkTo(methodOn(ProdutoController.class).listar(null)).withRel("colecao"))))
+                .map(p -> ResponseEntity.ok(toModelV1(p)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // 2. POST - Cria novo recurso (Não seguro / Não idempotente)
-    @PostMapping
-    @Operation(summary = "Criar (POST)", description = "Cadastra um novo produto. Não é idempotente (múltiplos envios criam múltiplos recursos).")
-    public ResponseEntity<Produto> criar(@RequestBody @Valid Produto produto,
-                                         @RequestHeader("Idempotency-Key") String key) {
-        // O uso do Header Idempotency-Key ajuda a mitigar a falta de idempotência do POST
-        return ResponseEntity.status(HttpStatus.CREATED).body(repository.save(produto));
+    @GetMapping("/buscar-por-preco")
+    @Operation(summary = "Consulta Personalizada - Faixa de Preço (GET)", description = "Busca produtos com preço dentro do intervalo especificado.")
+    public ResponseEntity<PagedModel<EntityModel<Produto>>> buscarPorFaixaDePreco(
+            @RequestParam Double min,
+            @RequestParam Double max,
+            Pageable pageable,
+            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
+        Page<Produto> lista = repository.findByPrecoBetween(min, max, pageable);
+        PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);
+        return ResponseEntity.ok(pagedModel);
     }
 
-    // 3. PUT - Atualiza/Substitui totalmente (Idempotente)
+    @PostMapping
+    @Operation(summary = "Criar Produto (POST)", description = "Cadastra um novo produto no estoque. Requer cabeçalho X-Idempotency-Key.")
+    public ResponseEntity<EntityModel<Produto>> criar(
+            @RequestBody @Valid Produto produto,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+        Produto salvo = repository.save(produto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toModelV1(salvo));
+    }
+
     @PutMapping("/{id}")
-    @Operation(summary = "Substituir (PUT)", description = "Substitui todos os dados do produto. É idempotente.")
-    public ResponseEntity<Produto> substituir(@PathVariable Long id, @RequestBody @Valid Produto novoProduto) {
+    @Operation(summary = "Substituir (PUT)", description = "Substitui todos os dados de um produto existente.")
+    public ResponseEntity<EntityModel<Produto>> substituir(@PathVariable Long id, @RequestBody @Valid Produto novoProduto) {
         return repository.findById(id).map(produto -> {
             produto.setNome(novoProduto.getNome());
             produto.setPreco(novoProduto.getPreco());
             produto.setCondicao(novoProduto.getCondicao());
             produto.setCategoria(novoProduto.getCategoria());
-            return ResponseEntity.ok(repository.save(produto));
+            Produto salvo = repository.save(produto);
+            return ResponseEntity.ok(toModelV1(salvo));
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // 4. PATCH - Atualização Parcial (Modificações específicas)
     @PatchMapping("/{id}")
-    @Operation(summary = "Parcial (PATCH)", description = "Altera apenas campos específicos (ex: só o preço).")
-    public ResponseEntity<Produto> atualizarParcial(@PathVariable Long id, @RequestBody Map<String, Object> campos) {
+    @Operation(summary = "Parcial (PATCH)", description = "Altera campos específicos de um produto (ex: nome, preço).")
+    public ResponseEntity<EntityModel<Produto>> atualizarParcial(@PathVariable Long id, @RequestBody Map<String, Object> campos) {
         Optional<Produto> produtoOpt = repository.findById(id);
         if (produtoOpt.isEmpty()) return ResponseEntity.notFound().build();
 
         Produto produto = produtoOpt.get();
 
-        // Lógica para aplicar apenas o que veio no JSON
         if (campos.containsKey("nome")) {
             produto.setNome((String) campos.get("nome"));
         }
@@ -85,12 +180,12 @@ public class ProdutoController {
             produto.setPreco(Double.valueOf(campos.get("preco").toString()));
         }
 
-        return ResponseEntity.ok(repository.save(produto));
+        Produto salvo = repository.save(produto);
+        return ResponseEntity.ok(toModelV1(salvo));
     }
 
-    // 5. DELETE - Remove o recurso (Idempotente)
     @DeleteMapping("/{id}")
-    @Operation(summary = "Remover (DELETE)", description = "Exclui permanentemente o produto. É idempotente.")
+    @Operation(summary = "Remover (DELETE)", description = "Exclui permanentemente um produto do estoque.")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();
         repository.deleteById(id);

@@ -26,6 +26,7 @@ public class Produto extends RepresentationModel<Produto> {
     // Muitos produtos pertencem a uma categoria
     @ManyToOne
     @JoinColumn(name = "categoria_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("produtos")
     private Categoria categoria;
 
     // Construtor padrão obrigatório

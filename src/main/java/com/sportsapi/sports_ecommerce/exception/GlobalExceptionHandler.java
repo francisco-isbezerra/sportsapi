@@ -73,4 +73,17 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    /**
+     * TRATAMENTO 409 - VIOLAÇÃO DE INTEGRIDADE (Ex: e-mail duplicado)
+     */
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflito de Dados");
+        body.put("message", "Ocorreu uma violação de integridade. Verifique se campos únicos (como e-mail) já existem.");
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
 }

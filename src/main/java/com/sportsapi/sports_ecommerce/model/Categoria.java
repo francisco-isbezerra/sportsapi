@@ -17,6 +17,7 @@ public class Categoria extends RepresentationModel<Categoria> {
 
     // mappedBy aponta para o nome do campo 'categoria' que criamos na classe Produto
     @OneToMany(mappedBy = "categoria")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("categoria")
     private List<Produto> produtos;
 
     public Categoria() {}
