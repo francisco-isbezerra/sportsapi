@@ -34,6 +34,7 @@ public class IdempotencyFilter extends OncePerRequestFilter {
                 path.startsWith("/swagger-ui") || 
                 path.startsWith("/v3/api-docs") || 
                 path.startsWith("/api-docs") || 
+                path.startsWith("/webjars") || 
                 path.startsWith("/h2-console") || 
                 path.equals("/api/auth/keys/gerar")) {
                 filterChain.doFilter(request, response);

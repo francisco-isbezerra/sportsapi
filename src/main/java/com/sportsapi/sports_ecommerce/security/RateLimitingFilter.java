@@ -67,10 +67,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         try {
             String path = request.getRequestURI();
 
-            // 1. Ignorar console H2 e documentação Swagger do rate limiting para facilitar desenvolvimento/testes
+            // 1. Ignorar console H2, webjars do Swagger e documentação do rate limiting para facilitar desenvolvimento/testes
             if (path.startsWith("/swagger-ui") || 
                 path.startsWith("/v3/api-docs") || 
                 path.startsWith("/api-docs") || 
+                path.startsWith("/webjars") || 
                 path.startsWith("/h2-console")) {
                 filterChain.doFilter(request, response);
                 return;

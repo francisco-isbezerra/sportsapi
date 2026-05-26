@@ -29,10 +29,11 @@ public class ApiKeyFilter extends OncePerRequestFilter {
             String path = request.getRequestURI();
             String method = request.getMethod();
 
-            // 1. Ignorar caminhos públicos de documentação, console H2 e geração de chaves
+            // 1. Ignorar caminhos públicos de documentação, webjars do Swagger, console H2 e geração de chaves
             if (path.startsWith("/swagger-ui") || 
                 path.startsWith("/v3/api-docs") || 
                 path.startsWith("/api-docs") || 
+                path.startsWith("/webjars") || 
                 path.startsWith("/h2-console") || 
                 path.equals("/api/auth/keys/gerar")) {
                 filterChain.doFilter(request, response);
