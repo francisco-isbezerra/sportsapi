@@ -104,4 +104,19 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(body, headers, HttpStatus.TOO_MANY_REQUESTS);
     }
+
+    /**
+     * TRATAMENTO 400 - PARÂMETRO DE ORDENAÇÃO (short) INVÁLIDO
+     * Ocorre no Swagger quando o usuário executa consultas com "short": ["string"].
+     */
+    @ExceptionHandler(org.springframework.data.mapping.PropertyReferenceException.class)
+    public ResponseEntity<Object> handlePropertyReferenceException(org.springframework.data.mapping.PropertyReferenceException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Parâmetro de Ordenação Inválido");
+        body.put("message", String.format("A propriedade '%s' não existe na entidade '%s' para ordenação (short).",
+                ex.getPropertyName(), ex.getType().getType().getSimpleName()));
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
 }

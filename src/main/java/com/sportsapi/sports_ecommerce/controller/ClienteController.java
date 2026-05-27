@@ -51,7 +51,7 @@ public class ClienteController {
         @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<PagedModel<EntityModel<Cliente>>> listar(
-            Pageable pageable,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Cliente> assembler) {
         Page<Cliente> lista = repository.findAll(pageable);
         PagedModel<EntityModel<Cliente>> pagedModel = assembler.toModel(lista, this::toModel);
@@ -83,7 +83,7 @@ public class ClienteController {
     })
     public ResponseEntity<PagedModel<EntityModel<Cliente>>> buscarPorNome(
             @RequestParam String nome,
-            Pageable pageable,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Cliente> assembler) {
         Page<Cliente> lista = repository.findByNomeContainingIgnoreCase(nome, pageable);
         PagedModel<EntityModel<Cliente>> pagedModel = assembler.toModel(lista, this::toModel);

@@ -51,7 +51,7 @@ public class EnderecoController {
         @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<PagedModel<EntityModel<Endereco>>> listar(
-            Pageable pageable,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Endereco> assembler) {
         Page<Endereco> lista = repository.findAll(pageable);
         PagedModel<EntityModel<Endereco>> pagedModel = assembler.toModel(lista, this::toModel);
@@ -83,7 +83,7 @@ public class EnderecoController {
     })
     public ResponseEntity<PagedModel<EntityModel<Endereco>>> buscarPorCep(
             @RequestParam String cep,
-            Pageable pageable,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Endereco> assembler) {
         Page<Endereco> lista = repository.findByCep(cep, pageable);
         PagedModel<EntityModel<Endereco>> pagedModel = assembler.toModel(lista, this::toModel);

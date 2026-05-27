@@ -107,7 +107,7 @@ public class ProdutoController {
         @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<?> listar(
-            Pageable pageable,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable,
             @RequestHeader(value = "X-API-Version", required = false) String apiVersion,
             @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
 
@@ -152,7 +152,7 @@ public class ProdutoController {
     public ResponseEntity<PagedModel<EntityModel<Produto>>> buscarPorFaixaDePreco(
             @RequestParam Double min,
             @RequestParam Double max,
-            Pageable pageable,
+            @org.springdoc.core.annotations.ParameterObject Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
         Page<Produto> lista = repository.findByPrecoBetween(min, max, pageable);
         PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);

@@ -114,7 +114,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/produtos?page=0&size=5&sort=preco,asc",
+							"raw": "{{base_url}}/api/produtos?page=0&size=5&short=preco,asc",
 							"host": [
 								"{{base_url}}"
 							],
@@ -132,7 +132,7 @@
 									"value": "5"
 								},
 								{
-									"key": "sort",
+									"key": "short",
 									"value": "preco,asc"
 								}
 							]
