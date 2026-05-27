@@ -4,6 +4,8 @@ import com.sportsapi.sports_ecommerce.model.Categoria;
 import com.sportsapi.sports_ecommerce.repository.CategoriaRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,12 @@ public class CategoriaController {
 
     @GetMapping
     @Operation(summary = "Listar (GET) - Paginado", description = "Busca categorias de forma paginada usando PagedModel com links de paginação.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de categorias recuperada com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Categoria>>> listar(
             Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Categoria> assembler) {
@@ -53,6 +61,13 @@ public class CategoriaController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar por ID (GET)", description = "Recupera uma categoria específica com links HATEOAS.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoria recuperada com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Categoria>> buscar(@PathVariable Long id) {
         return repository.findById(id)
                 .map(c -> ResponseEntity.ok(toModel(c)))
@@ -61,6 +76,12 @@ public class CategoriaController {
 
     @GetMapping("/buscar-por-nome")
     @Operation(summary = "Consulta Personalizada - Buscar por Nome (GET)", description = "Busca categorias cujo nome contém o texto fornecido (case-insensitive).")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categorias filtradas por nome com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Categoria>>> buscarPorNome(
             @RequestParam String nome,
             Pageable pageable,
@@ -72,6 +93,15 @@ public class CategoriaController {
 
     @PostMapping
     @Operation(summary = "Criar (POST)", description = "Cria uma nova categoria. Requer cabeçalho X-Idempotency-Key para evitar duplicados.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Categoria criada com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos ou cabeçalho X-Idempotency-Key ausente."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "409", description = "Conflito. Chave de idempotência já utilizada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Categoria>> criar(
             @RequestBody @Valid Categoria categoria,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
@@ -81,6 +111,15 @@ public class CategoriaController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Substituir (PUT)", description = "Atualiza todos os campos de uma categoria.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoria substituída com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Categoria>> substituir(@PathVariable Long id, @RequestBody @Valid Categoria novaCategoria) {
         return repository.findById(id).map(categoria -> {
             categoria.setNome(novaCategoria.getNome());
@@ -91,6 +130,14 @@ public class CategoriaController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Parcial (PATCH)", description = "Atualiza apenas os campos enviados no corpo.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoria atualizada com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Categoria>> atualizarParcial(@PathVariable Long id, @RequestBody Map<String, Object> campos) {
         Optional<Categoria> categoriaAtual = repository.findById(id);
 
@@ -109,6 +156,14 @@ public class CategoriaController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remover (DELETE)", description = "Exclui uma categoria do sistema.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Categoria excluída com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();
         repository.deleteById(id);

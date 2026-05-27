@@ -4,6 +4,8 @@ import com.sportsapi.sports_ecommerce.model.Endereco;
 import com.sportsapi.sports_ecommerce.repository.EnderecoRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,12 @@ public class EnderecoController {
 
     @GetMapping
     @Operation(summary = "Listar Endereços (GET)", description = "Retorna uma lista paginada de todos os endereços com links HATEOAS.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de endereços recuperada com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Endereco>>> listar(
             Pageable pageable,
             @Parameter(hidden = true) PagedResourcesAssembler<Endereco> assembler) {
@@ -52,6 +60,13 @@ public class EnderecoController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar por ID (GET)", description = "Recupera um endereço específico pelo ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Endereço recuperado com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "404", description = "Endereço não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Endereco>> buscarPorId(@PathVariable Long id) {
         return repository.findById(id)
                 .map(e -> ResponseEntity.ok(toModel(e)))
@@ -60,6 +75,12 @@ public class EnderecoController {
 
     @GetMapping("/buscar-por-cep")
     @Operation(summary = "Consulta Personalizada - Buscar por CEP (GET)", description = "Retorna uma lista paginada de endereços filtrada por CEP exato.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Endereços filtrados por CEP recuperados com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Endereco>>> buscarPorCep(
             @RequestParam String cep,
             Pageable pageable,
@@ -71,6 +92,15 @@ public class EnderecoController {
 
     @PostMapping
     @Operation(summary = "Criar Endereço (POST)", description = "Cadastra um novo endereço no sistema. Requer cabeçalho X-Idempotency-Key.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Endereço criado com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos ou cabeçalho X-Idempotency-Key ausente."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "409", description = "Conflito. Chave de idempotência já utilizada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Endereco>> criar(
             @RequestBody @Valid Endereco endereco,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
@@ -80,6 +110,15 @@ public class EnderecoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Substituir (PUT)", description = "Substitui completamente os dados de um endereço.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Endereço substituído com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Endereço não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Endereco>> substituir(@PathVariable Long id, @RequestBody @Valid Endereco novoEndereco) {
         return repository.findById(id).map(endereco -> {
             endereco.setLogradouro(novoEndereco.getLogradouro());
@@ -91,6 +130,14 @@ public class EnderecoController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Atualizar Parcial (PATCH)", description = "Atualiza apenas campos específicos do endereço.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Endereço atualizado com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Endereço não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Endereco>> atualizarParcial(@PathVariable Long id, @RequestBody Map<String, Object> campos) {
         Optional<Endereco> enderecoOpt = repository.findById(id);
         if (enderecoOpt.isEmpty()) return ResponseEntity.notFound().build();
@@ -111,6 +158,14 @@ public class EnderecoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remover (DELETE)", description = "Exclui um endereço permanentemente.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Endereço excluído com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Endereço não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();
         repository.deleteById(id);

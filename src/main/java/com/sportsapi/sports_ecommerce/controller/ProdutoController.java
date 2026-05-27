@@ -4,6 +4,8 @@ import com.sportsapi.sports_ecommerce.model.Produto;
 import com.sportsapi.sports_ecommerce.repository.ProdutoRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,8 @@ public class ProdutoController {
         private String precoFormatado; // Campo extra formatado da V2
         private String condicao;
         private String categoriaNome; // Nome simplificado da categoria para o cliente da V2
+        private String desconto; // NOVO: Campo extra da V2
+        private Double precoComDesconto; // NOVO: Campo extra da V2
 
         public ProdutoV2Dto(Produto p) {
             this.id = p.getId();
@@ -47,6 +51,8 @@ public class ProdutoController {
             this.precoFormatado = String.format("R$ %.2f", p.getPreco());
             this.condicao = p.getCondicao() != null ? p.getCondicao().name() : null;
             this.categoriaNome = p.getCategoria() != null ? p.getCategoria().getNome() : "Sem Categoria";
+            this.desconto = "10% de Desconto Esportivo Especial!";
+            this.precoComDesconto = p.getPreco() != null ? Math.round((p.getPreco() * 0.9) * 100.0) / 100.0 : 0.0;
         }
 
         // Getters e Setters
@@ -62,6 +68,10 @@ public class ProdutoController {
         public void setCondicao(String condicao) { this.condicao = condicao; }
         public String getCategoriaNome() { return categoriaNome; }
         public void setCategoriaNome(String categoriaNome) { this.categoriaNome = categoriaNome; }
+        public String getDesconto() { return desconto; }
+        public void setDesconto(String desconto) { this.desconto = desconto; }
+        public Double getPrecoComDesconto() { return precoComDesconto; }
+        public void setPrecoComDesconto(Double precoComDesconto) { this.precoComDesconto = precoComDesconto; }
     }
 
     // Assembler auxiliar para V1
@@ -71,7 +81,7 @@ public class ProdutoController {
                 linkTo(methodOn(ProdutoController.class).substituir(p.getId(), null)).withRel("update"),
                 linkTo(methodOn(ProdutoController.class).atualizarParcial(p.getId(), null)).withRel("patch"),
                 linkTo(methodOn(ProdutoController.class).deletar(p.getId())).withRel("delete"),
-                linkTo(methodOn(ProdutoController.class).listarV1(null, null)).withRel("colecao")
+                linkTo(methodOn(ProdutoController.class).listar(null, null, null)).withRel("colecao")
         );
     }
 
@@ -80,43 +90,36 @@ public class ProdutoController {
         ProdutoV2Dto dto = new ProdutoV2Dto(p);
         return EntityModel.of(dto,
                 linkTo(methodOn(ProdutoController.class).buscarPorId(p.getId())).withSelfRel(),
-                linkTo(methodOn(ProdutoController.class).listarV2(null, null)).withRel("colecao")
+                linkTo(methodOn(ProdutoController.class).listar(null, null, null)).withRel("colecao")
         );
     }
 
     // ==========================================
-    // 1. GET - LISTAR (VERSIONAMENTO VIA CABEÇALHO)
+    // 1. GET - LISTAR (UNIFICADO COM VERSIONAMENTO)
     // ==========================================
 
-    // Versão 1: Retorno padrão (caso X-API-Version seja 1 ou não enviado)
-    @GetMapping(headers = "!X-API-Version")
-    @Operation(summary = "Listar Produtos V1 (Padrão)", description = "Retorna lista de produtos padrão de forma paginada. Executado se X-API-Version não for enviado.")
-    public ResponseEntity<PagedModel<EntityModel<Produto>>> listarPadrao(
+    @GetMapping
+    @Operation(summary = "Listar Produtos (GET)", description = "Retorna produtos de forma paginada. Se o cabeçalho X-API-Version for igual a '2', retorna o contrato V2 (com preço formatado, desconto e categoria simplificada). Caso contrário (ou se ausente), retorna a V1 padrão.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de produtos recuperada com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
+    public ResponseEntity<?> listar(
             Pageable pageable,
+            @RequestHeader(value = "X-API-Version", required = false) String apiVersion,
             @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
-        return listarV1(pageable, assembler);
-    }
 
-    @GetMapping(headers = "X-API-Version=1")
-    @Operation(summary = "Listar Produtos V1 (Cabeçalho)", description = "Retorna lista de produtos padrão. Ativado pelo cabeçalho X-API-Version=1.")
-    public ResponseEntity<PagedModel<EntityModel<Produto>>> listarV1(
-            Pageable pageable,
-            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
         Page<Produto> lista = repository.findAll(pageable);
-        PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);
-        return ResponseEntity.ok(pagedModel);
-    }
 
-    // Versão 2: Retorno aprimorado (caso X-API-Version seja 2)
-    @GetMapping(headers = "X-API-Version=2")
-    @Operation(summary = "Listar Produtos V2 (Cabeçalho)", description = "Retorna lista de produtos no novo formato V2 (com preço formatado e categoria simplificada). Ativado por X-API-Version=2.")
-    public ResponseEntity<PagedModel<EntityModel<ProdutoV2Dto>>> listarV2(
-            Pageable pageable,
-            @Parameter(hidden = true) PagedResourcesAssembler<Produto> assembler) {
-        Page<Produto> lista = repository.findAll(pageable);
-        // Mapeia o resultado usando o assembler para o DTO V2
-        PagedModel<EntityModel<ProdutoV2Dto>> pagedModel = assembler.toModel(lista, this::toModelV2);
-        return ResponseEntity.ok(pagedModel);
+        if ("2".equals(apiVersion)) {
+            PagedModel<EntityModel<ProdutoV2Dto>> pagedModel = assembler.toModel(lista, this::toModelV2);
+            return ResponseEntity.ok(pagedModel);
+        } else {
+            PagedModel<EntityModel<Produto>> pagedModel = assembler.toModel(lista, this::toModelV1);
+            return ResponseEntity.ok(pagedModel);
+        }
     }
 
     // ==========================================
@@ -125,6 +128,13 @@ public class ProdutoController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar por ID (GET)", description = "Recupera os detalhes de um produto com links HATEOAS.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Produto recuperado com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Produto>> buscarPorId(@PathVariable Long id) {
         return repository.findById(id)
                 .map(p -> ResponseEntity.ok(toModelV1(p)))
@@ -133,6 +143,12 @@ public class ProdutoController {
 
     @GetMapping("/buscar-por-preco")
     @Operation(summary = "Consulta Personalizada - Faixa de Preço (GET)", description = "Busca produtos com preço dentro do intervalo especificado.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Produtos filtrados por preço com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<PagedModel<EntityModel<Produto>>> buscarPorFaixaDePreco(
             @RequestParam Double min,
             @RequestParam Double max,
@@ -145,6 +161,15 @@ public class ProdutoController {
 
     @PostMapping
     @Operation(summary = "Criar Produto (POST)", description = "Cadastra um novo produto no estoque. Requer cabeçalho X-Idempotency-Key.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos ou cabeçalho X-Idempotency-Key ausente."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "409", description = "Conflito. Chave de idempotência já utilizada."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Produto>> criar(
             @RequestBody @Valid Produto produto,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
@@ -154,6 +179,15 @@ public class ProdutoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Substituir (PUT)", description = "Substitui todos os dados de um produto existente.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Produto substituído com sucesso."),
+        @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Produto>> substituir(@PathVariable Long id, @RequestBody @Valid Produto novoProduto) {
         return repository.findById(id).map(produto -> {
             produto.setNome(novoProduto.getNome());
@@ -167,6 +201,14 @@ public class ProdutoController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Parcial (PATCH)", description = "Altera campos específicos de um produto (ex: nome, preço).")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<EntityModel<Produto>> atualizarParcial(@PathVariable Long id, @RequestBody Map<String, Object> campos) {
         Optional<Produto> produtoOpt = repository.findById(id);
         if (produtoOpt.isEmpty()) return ResponseEntity.notFound().build();
@@ -186,6 +228,14 @@ public class ProdutoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Remover (DELETE)", description = "Exclui permanentemente um produto do estoque.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Produto excluído com sucesso."),
+        @ApiResponse(responseCode = "401", description = "Não autorizado. Chave de API ausente ou inválida."),
+        @ApiResponse(responseCode = "403", description = "Acesso proibido. Operação requer privilégios de ADMIN."),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado."),
+        @ApiResponse(responseCode = "429", description = "Limite de requisições excedido (Rate Limiting)."),
+        @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();
         repository.deleteById(id);

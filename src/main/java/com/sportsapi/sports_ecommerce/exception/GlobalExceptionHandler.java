@@ -86,4 +86,22 @@ public class GlobalExceptionHandler {
         body.put("message", "Ocorreu uma violação de integridade. Verifique se campos únicos (como e-mail) já existem.");
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
+
+    /**
+     * TRATAMENTO 429 - LIMITE DE REQUISIÇÕES EXCEDIDO
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Object> handleRateLimitExceeded(RateLimitExceededException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
+        body.put("error", "Too Many Requests");
+        body.put("message", ex.getMessage());
+        body.put("retryAfterSeconds", ex.getRetryAfterSeconds());
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("Retry-After", String.valueOf(ex.getRetryAfterSeconds()));
+
+        return new ResponseEntity<>(body, headers, HttpStatus.TOO_MANY_REQUESTS);
+    }
 }
