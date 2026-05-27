@@ -648,14 +648,14 @@
             <div class="card">
                 <h3 class="card-title">⏱️ Limitador de Taxa (Rate Limiting)</h3>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-                    Nossa API implementa limitação de taxa por IP de 15 chamadas a cada 10 segundos. Clique consecutivamente no botão de testes para ver o limitador esgotar e retornar o status <strong>429 (Too Many Requests)</strong>.
+                    Nossa API implementa limitação de taxa por IP de 2 chamadas (com recarga gradual de 1 token a cada 5 segundos). Clique consecutivamente no botão de testes para ver o limitador esgotar e retornar o status <strong>429 (Too Many Requests)</strong>.
                 </p>
 
                 <div class="rate-limit-card">
                     <div class="rate-info">
                         <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600;">
                             <span>Tokens Restantes na Sessão</span>
-                            <span id="rateLimitText">15 / 15</span>
+                            <span id="rateLimitText">2 / 2</span>
                         </div>
                         <div class="rate-progress-bar">
                             <div class="rate-progress" id="rateLimitProgress" style="width: 100%;"></div>
@@ -1003,7 +1003,7 @@ ${JSON.stringify(data, null, 2)}`;
                 headers: { 'X-API-Key': state.apiKey }
             });
 
-            const limit = response.headers.get('X-RateLimit-Limit') || '15';
+            const limit = response.headers.get('X-RateLimit-Limit') || '2';
             const remaining = response.headers.get('X-RateLimit-Remaining') || '0';
             const retryAfter = response.headers.get('Retry-After');
 

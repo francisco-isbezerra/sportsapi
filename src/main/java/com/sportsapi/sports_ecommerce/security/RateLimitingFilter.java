@@ -16,8 +16,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final ConcurrentHashMap<String, TokenBucket> ipBuckets = new ConcurrentHashMap<>();
 
-    private static final int BUCKET_CAPACITY = 100;
-    private static final double REFILL_RATE_PER_SECOND = 50.0; // Recarrega 50 tokens por segundo
+    private static final int BUCKET_CAPACITY = 2;
+    private static final double REFILL_RATE_PER_SECOND = 0.2; // Recarrega 1 token a cada 5 segundos
 
     @org.springframework.beans.factory.annotation.Autowired
     @org.springframework.beans.factory.annotation.Qualifier("handlerExceptionResolver")
