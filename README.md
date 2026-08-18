@@ -16,7 +16,7 @@ API de alta performance desenvolvida para o projeto final de avaliação da disc
    .\mvnw spring-boot:run
    ```
 3. O servidor subirá na porta **8080**:
-   - **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (Documentação interativa completa)
+   - **Swagger UI**: [https://sportsapi-dg1j.onrender.com/swagger-ui/index.html#](https://sportsapi-dg1j.onrender.com/swagger-ui/index.html#) (Documentação interativa completa)
    - **Banco de Dados H2**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:mem:sportsdb`, User: `sa`, Senha em branco)
 
 ---
